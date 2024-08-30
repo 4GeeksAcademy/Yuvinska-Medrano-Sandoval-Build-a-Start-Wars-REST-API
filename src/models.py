@@ -1,4 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy, user, planet, character, favorite
+from flask_sqlalchemy import SQLAlchemy
 
 
 
@@ -14,10 +14,11 @@ db = SQLAlchemy()
 class User(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(18), unique=False, nullable=False)
+    username = db.Column(db.String(80), unique=False, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(80), unique=False, nullable=False)
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
+    favorites = db.relationship('Favorite', backref = 'user', lazy = True)
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -26,8 +27,11 @@ class User(db.Model):
         return {
             "id": self.id,
             "email": self.email,
-            "password": self.password,
-            "is_active": self.is_active
+            "username": self.username,
+            #"password": self.password,
+            "is_active": self.is_active,
+            "favorites": [favorite.serialize() for favorite in self.favorites]
+
             
         }
 class Character(db.Model):
@@ -39,6 +43,8 @@ class Character(db.Model):
     weight = db.Column(db.String(5), nullable=False)
     hair_color = db.Column(db.String(15), nullable=True)
     skin_color = db.Column(db.String(15), nullable=True)
+    favorites = db.relationship('Favorite', backref = 'character', lazy = True)
+    
 
 
     def __repr__(self):
@@ -63,6 +69,7 @@ class Planet(db.Model):
     territory = db.Column(db.String(25), nullable=False)
     population = db.Column(db.String(15), nullable=False)
     diameter = db.Column(db.String(10), nullable=False)
+    favorites = db.relationship('Favorite', backref = 'planet', lazy = True)
 
     def __repr__(self):
         return '<Planets %r>' % self.id
@@ -92,6 +99,9 @@ class Favorite(db.Model):
             "id": self.id,
             "user_id": self.user_id,
             "planet_id": self.planet_id,
-            "character_id": self.character_id
+            "character_id": self.character_id,
+            "user": self.user.serialize() if self.user else None, 
+            "planet": self.planet.serialize() if self.planet else None, 
+            "character": self.character.serialize() if self.character else None, 
             
         }
